@@ -1,23 +1,40 @@
-name: Sync Fork with Upstream
+name: Sync Fork Main Branch
 
 on:
   schedule:
-    - cron: '0 0 * * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *' # Runs daily at midnight UTC
+  workflow_dispatch: # Allows manual triggering
+
+permissions:
+  contents: write # Required to push changes to the main branch
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+      - name: Checkout forked repository
+        uses: actions/checkout@v4
         with:
-          # Branch receiving updates from the upstream repo, e.g. => main, master, prod
-          target_sync_branch: main
-          # Input for passing secrets.GITHUB_TOKEN when disabling persistent auth in the checkout step
-          target_repo_token: ${{ secrets.GITHUB_TOKEN }}
-          # Upstream repository, e.g. => aormsby/Fork-Sync-With-Upstream-action
-          upstream_sync_repo: iamr0b0tx/creationary-frontend
-          # Branch to sync from, e.g. => main, master, dev
-          upstream_sync_branch: main
-          # Git user credentials for sigining commit, (set to "null" for no config
-                    
+          repository: enielect/creationary-frontend # Replace with your repo details
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 # Fetch all history for accurate diffing
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/iamr0b0tx/creationary-frontend
+          git fetch upstream
+
+      - name: Check for differences and sync
+        run: |
+          git checkout main
+          UPSTREAM_HASH=$(git rev-parse upstream/main)
+          FORK_HASH=$(git rev-parse main)
+
+          if [ "$UPSTREAM_HASH" != "$FORK_HASH" ]; then
+            echo "Upstream main is ahead of fork main. Syncing..."
+            git merge upstream/main --no-edit # Merge upstream changes
+            git push origin main
+            echo "Fork main synced successfully."
+          else
+            echo "Fork main is already in sync with upstream main."
+          fi
