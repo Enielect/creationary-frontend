@@ -36,7 +36,7 @@ jobs:
           if [ "$UPSTREAM_HASH" != "$FORK_HASH" ]; then
             echo "Upstream main is ahead of fork main. Syncing..."
             git merge upstream/main --no-edit # Merge upstream changes
-            git push origin main
+            git push https://${{ secrets.WORKFLOW_TOKEN }}@github.com/${{ github.repository }}.git main
             echo "Fork main synced successfully."
           else
             echo "Fork main is already in sync with upstream main."
