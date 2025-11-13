@@ -26,7 +26,7 @@ jobs:
 
       - name: Check for differences and sync
         run: |
-          git checkout main
+          git checkout --track origin/main
           UPSTREAM_HASH=$(git rev-parse upstream/main)
           FORK_HASH=$(git rev-parse main)
 
