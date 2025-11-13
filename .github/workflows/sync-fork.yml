@@ -15,7 +15,7 @@ jobs:
       - name: Checkout forked repository
         uses: actions/checkout@v4
         with:
-          repository: enielect/creationary-frontend # Replace with your repo details
+          repository: Enielect/creationary-frontend # Replace with your repo details
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0 # Fetch all history for accurate diffing
 
