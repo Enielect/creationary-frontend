@@ -2,42 +2,39 @@ name: Sync Fork Main Branch
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Runs daily at midnight UTC
-  workflow_dispatch: # Allows manual triggering
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 permissions:
-  contents: write # Required to push changes to the main branch
+  contents: write
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout forked repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          repository: Enielect/creationary-frontend # Replace with your repo details
           token: ${{ secrets.WORKFLOW_TOKEN }}
-          fetch-depth: 0 # Fetch all history for accurate diffing
-      - name: Setup git
-        run: |
-          git config --global user.name eniola
-          git config --global user.email eniolafaithful57@gmail.com
-      - name: Add upstream remote
-        run: |
-          git remote add upstream https://github.com/iamr0b0tx/creationary-frontend
-          git fetch upstream
+          fetch-depth: 0
 
-      - name: Check for differences and sync
+      - name: Configure git
         run: |
-          git checkout --track origin/main
-          UPSTREAM_HASH=$(git rev-parse upstream/main)
-          FORK_HASH=$(git rev-parse main)
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          # Set remote URL with token for all operations
+          git remote set-url origin https://${{ secrets.WORKFLOW_TOKEN }}@github.com/${{ github.repository }}.git
 
-          if [ "$UPSTREAM_HASH" != "$FORK_HASH" ]; then
-            echo "Upstream main is ahead of fork main. Syncing..."
-            git merge upstream/main --no-edit # Merge upstream changes
-            git push https://${{ secrets.WORKFLOW_TOKEN }}@github.com/${{ github.repository }}.git main
-            echo "Fork main synced successfully."
+      - name: Sync with upstream
+        run: |
+          git remote add upstream https://github.com/iamr0b0tx/creationary-frontend.git
+          git fetch upstream main
+          
+          if ! git merge-base --is-ancestor upstream/main main; then
+            echo "Upstream has new commits. Syncing..."
+            git merge --no-edit --no-ff upstream/main
+            git push origin main
+            echo "Sync completed successfully."
           else
-            echo "Fork main is already in sync with upstream main."
+            echo "Already up to date."
           fi
