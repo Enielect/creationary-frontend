@@ -18,7 +18,10 @@ jobs:
           repository: Enielect/creationary-frontend # Replace with your repo details
           token: ${{ secrets.WORKFLOW_TOKEN }}
           fetch-depth: 0 # Fetch all history for accurate diffing
-
+      - name: Setup git
+        run: |
+          git config --global user.name eniola
+          git config --global user.email eniolafaithful57@gmail.com
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/iamr0b0tx/creationary-frontend
