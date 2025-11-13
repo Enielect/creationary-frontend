@@ -5,6 +5,9 @@ on:
     - cron: '0 0 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -19,23 +22,19 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          # Set remote URL with token for all operations
+          git remote set-url origin https://${{ secrets.WORKFLOW_TOKEN }}@github.com/${{ github.repository }}.git
 
-      - name: Sync fork
+      - name: Sync with upstream
         run: |
-          # Add upstream if not exists
-          if ! git remote | grep -q upstream; then
-            git remote add upstream https://github.com/iamr0b0tx/creationary-frontend.git
+          git remote add upstream https://github.com/iamr0b0tx/creationary-frontend.git
+          git fetch upstream main
+          
+          if ! git merge-base --is-ancestor upstream/main main; then
+            echo "Upstream has new commits. Syncing..."
+            git merge --no-edit --no-ff upstream/main
+            git push origin main
+            echo "Sync completed successfully."
+          else
+            echo "Already up to date."
           fi
-          
-          # Fetch all branches
-          git fetch --all
-          
-          # Ensure we're on main branch and it tracks origin/main
-          git checkout -B main origin/main --track
-          
-          # Reset to upstream main (this is cleaner than merge for sync)
-          git reset --hard upstream/main
-          
-          # Push to origin
-          git push https://${{ secrets.WORKFLOW_TOKEN }}@github.com/${{ github.repository }}.git main --force
-          echo "Fork synced successfully"
