@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Enielect/creationary-frontend # Replace with your repo details
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0 # Fetch all history for accurate diffing
 
       - name: Add upstream remote
